@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindWell - Mental Health Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-shadow { box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .mood-emoji { font-size: 2rem; cursor: pointer; transition: all 0.3s ease; }
+        .mood-emoji:hover { transform: scale(1.2); }
+        .mood-emoji.selected { transform: scale(1.3); filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.5)); }
+        .recommendation-card { transition: all 0.3s ease; }
+        .recommendation-card:hover { transform: translateY(-5px); }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-6 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-3xl font-bold mb-2">🧠 MindWell</h1>
+            <p class="text-blue-100">Your personal mental health companion</p>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Navigation Tabs -->
+        <div class="flex flex-wrap gap-2 mb-8 bg-white rounded-lg p-2 card-shadow">
+            <button onclick="showTab('checkin')" id="checkin-tab" class="tab-btn px-6 py-3 rounded-lg font-medium transition-all bg-blue-500 text-white">Daily Check-in</button>
+            <button onclick="showTab('trends')" id="trends-tab" class="tab-btn px-6 py-3 rounded-lg font-medium transition-all text-gray-600 hover:bg-gray-100">Mood Trends</button>
+            <button onclick="showTab('recommendations')" id="recommendations-tab" class="tab-btn px-6 py-3 rounded-lg font-medium transition-all text-gray-600 hover:bg-gray-100">Wellness Tips</button>
+            <button onclick="showTab('journal')" id="journal-tab" class="tab-btn px-6 py-3 rounded-lg font-medium transition-all text-gray-600 hover:bg-gray-100">Journal</button>
+        </div>
+
+        <!-- Daily Check-in Tab -->
+        <div id="checkin-content" class="tab-content">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Mood Selection -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">How are you feeling today?</h2>
+                    <div class="grid grid-cols-5 gap-4 mb-6">
+                        <div class="text-center">
+                            <div class="mood-emoji" data-mood="1" onclick="selectMood(1)">😢</div>
+                            <p class="text-sm text-gray-600 mt-2">Very Low</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="mood-emoji" data-mood="2" onclick="selectMood(2)">😔</div>
+                            <p class="text-sm text-gray-600 mt-2">Low</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="mood-emoji" data-mood="3" onclick="selectMood(3)">😐</div>
+                            <p class="text-sm text-gray-600 mt-2">Neutral</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="mood-emoji" data-mood="4" onclick="selectMood(4)">😊</div>
+                            <p class="text-sm text-gray-600 mt-2">Good</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="mood-emoji" data-mood="5" onclick="selectMood(5)">😄</div>
+                            <p class="text-sm text-gray-600 mt-2">Excellent</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Mood Factors -->
+                    <h3 class="text-lg font-medium mb-3 text-gray-800">What's influencing your mood?</h3>
+                    <div class="grid grid-cols-2 gap-2 mb-6">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="mood-factor rounded text-blue-500" value="sleep">
+                            <span class="text-sm">Sleep Quality</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="mood-factor rounded text-blue-500" value="work">
+                            <span class="text-sm">Work Stress</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="mood-factor rounded text-blue-500" value="social">
+                            <span class="text-sm">Social Life</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="mood-factor rounded text-blue-500" value="exercise">
+                            <span class="text-sm">Exercise</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="mood-factor rounded text-blue-500" value="weather">
+                            <span class="text-sm">Weather</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="mood-factor rounded text-blue-500" value="health">
+                            <span class="text-sm">Physical Health</span>
+                        </label>
+                    </div>
+
+                    <button onclick="submitMoodCheckin()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition-colors">
+                        Submit Check-in
+                    </button>
+                </div>
+
+                <!-- Journal Entry -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Daily Reflection</h2>
+                    <textarea id="journal-entry" placeholder="How was your day? What are you grateful for? Any thoughts or feelings you'd like to capture..." 
+                              class="w-full h-40 p-4 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    
+                    <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-medium text-blue-800 mb-2">💡 Sentiment Analysis</h4>
+                        <div id="sentiment-result" class="text-sm text-blue-700">
+                            Start writing to see real-time sentiment analysis...
+                        </div>
+                    </div>
+
+                    <button onclick="saveJournalEntry()" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition-colors">
+                        Save Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- Today's Summary -->
+            <div id="daily-summary" class="mt-8 bg-white rounded-xl p-6 card-shadow hidden">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Today's Summary</h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="text-center p-4 bg-blue-50 rounded-lg">
+                        <div class="text-2xl mb-2" id="summary-mood">😊</div>
+                        <p class="font-medium text-blue-800">Mood Rating</p>
+                        <p class="text-sm text-blue-600" id="summary-rating">4/5</p>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <div class="text-2xl mb-2">📝</div>
+                        <p class="font-medium text-green-800">Journal Sentiment</p>
+                        <p class="text-sm text-green-600" id="summary-sentiment">Positive</p>
+                    </div>
+                    <div class="text-center p-4 bg-purple-50 rounded-lg">
+                        <div class="text-2xl mb-2">🎯</div>
+                        <p class="font-medium text-purple-800">Streak</p>
+                        <p class="text-sm text-purple-600" id="summary-streak">7 days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mood Trends Tab -->
+        <div id="trends-content" class="tab-content hidden">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Mood Chart -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Mood Trends (Last 30 Days)</h2>
+                    <canvas id="moodChart" width="400" height="200"></canvas>
+                </div>
+
+                <!-- Statistics -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Your Statistics</h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+                            <span class="font-medium text-blue-800">Average Mood</span>
+                            <span class="text-2xl">😊 3.8/5</span>
+                        </div>
+                        <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+                            <span class="font-medium text-green-800">Best Day</span>
+                            <span class="text-green-600">Yesterday (4.5/5)</span>
+                        </div>
+                        <div class="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
+                            <span class="font-medium text-purple-800">Check-in Streak</span>
+                            <span class="text-purple-600">🔥 12 days</span>
+                        </div>
+                        <div class="flex justify-between items-center p-4 bg-yellow-50 rounded-lg">
+                            <span class="font-medium text-yellow-800">Most Common Factor</span>
+                            <span class="text-yellow-600">Sleep Quality</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mood Patterns -->
+            <div class="mt-8 bg-white rounded-xl p-6 card-shadow">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Weekly Patterns</h2>
+                <canvas id="weeklyChart" width="400" height="150"></canvas>
+            </div>
+        </div>
+
+        <!-- Recommendations Tab -->
+        <div id="recommendations-content" class="tab-content hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-semibold mb-2 text-gray-800">Personalized Wellness Recommendations</h2>
+                <p class="text-gray-600">Based on your recent mood patterns and check-ins</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="recommendations-grid">
+                <!-- Recommendations will be populated by JavaScript -->
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mt-8 bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Quick Wellness Actions</h3>
+                <div class="grid md:grid-cols-4 gap-4">
+                    <button onclick="startBreathingExercise()" class="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-center transition-colors">
+                        <div class="text-2xl mb-2">🫁</div>
+                        <p class="font-medium text-blue-800">Breathing Exercise</p>
+                    </button>
+                    <button onclick="startMeditation()" class="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-center transition-colors">
+                        <div class="text-2xl mb-2">🧘</div>
+                        <p class="font-medium text-green-800">5-Min Meditation</p>
+                    </button>
+                    <button onclick="startGratitude()" class="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-center transition-colors">
+                        <div class="text-2xl mb-2">🙏</div>
+                        <p class="font-medium text-purple-800">Gratitude Practice</p>
+                    </button>
+                    <button onclick="startMovement()" class="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-center transition-colors">
+                        <div class="text-2xl mb-2">🏃</div>
+                        <p class="font-medium text-orange-800">Quick Movement</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Journal Tab -->
+        <div id="journal-content" class="tab-content hidden">
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Journal Entries</h2>
+                <div id="journal-entries" class="space-y-4">
+                    <!-- Journal entries will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breathing Exercise Modal -->
+    <div id="breathing-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-md mx-4 text-center">
+            <h3 class="text-2xl font-semibold mb-4">Breathing Exercise</h3>
+            <div class="text-6xl mb-4 pulse" id="breathing-circle">⭕</div>
+            <p class="text-lg mb-4" id="breathing-instruction">Click Start to begin</p>
+            <div class="space-x-4">
+                <button onclick="startBreathing()" id="start-breathing" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Start</button>
+                <button onclick="closeBreathingModal()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentMood = null;
+        let moodData = JSON.parse(localStorage.getItem('moodData')) || [];
+        let journalEntries = JSON.parse(localStorage.getItem('journalEntries')) || [];
+        let currentStreak = parseInt(localStorage.getItem('currentStreak')) || 0;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadRecommendations();
+            loadJournalEntries();
+            setupSentimentAnalysis();
+            updateStreakDisplay();
+        });
+
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+            
+            // Add active class to selected tab
+            const activeTab = document.getElementById(tabName + '-tab');
+            activeTab.classList.add('bg-blue-500', 'text-white');
+            activeTab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+
+            // Refresh charts if trends tab is selected
+            if (tabName === 'trends') {
+                setTimeout(() => {
+                    initializeCharts();
+                }, 100);
+            }
+        }
+
+        // Mood selection
+        function selectMood(mood) {
+            currentMood = mood;
+            document.querySelectorAll('.mood-emoji').forEach(emoji => {
+                emoji.classList.remove('selected');
+            });
+            document.querySelector(`[data-mood="${mood}"]`).classList.add('selected');
+        }
+
+        // Submit mood check-in
+        function submitMoodCheckin() {
+            if (!currentMood) {
+                alert('Please select your mood first!');
+                return;
+            }
+
+            const factors = Array.from(document.querySelectorAll('.mood-factor:checked')).map(cb => cb.value);
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Remove any existing entry for today
+            moodData = moodData.filter(entry => entry.date !== today);
+            
+            // Add new entry
+            moodData.push({
+                date: today,
+                mood: currentMood,
+                factors: factors,
+                timestamp: new Date().toISOString()
+            });
+
+            // Update streak
+            updateStreak();
+            
+            // Save to localStorage
+            localStorage.setItem('moodData', JSON.stringify(moodData));
+            localStorage.setItem('currentStreak', currentStreak.toString());
+
+            // Show summary
+            showDailySummary();
+            
+            // Reset form
+            currentMood = null;
+            document.querySelectorAll('.mood-emoji').forEach(emoji => {
+                emoji.classList.remove('selected');
+            });
+            document.querySelectorAll('.mood-factor').forEach(cb => {
+                cb.checked = false;
+            });
+
+            alert('Mood check-in saved! 🎉');
+        }
+
+        // Update streak
+        function updateStreak() {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const todayStr = today.toISOString().split('T')[0];
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            const hasToday = moodData.some(entry => entry.date === todayStr);
+            const hasYesterday = moodData.some(entry => entry.date === yesterdayStr);
+            
+            if (hasToday && hasYesterday) {
+                currentStreak++;
+            } else if (hasToday && !hasYesterday) {
+                currentStreak = 1;
+            }
+        }
+
+        // Show daily summary
+        function showDailySummary() {
+            const today = moodData.find(entry => entry.date === new Date().toISOString().split('T')[0]);
+            if (today) {
+                const moodEmojis = ['', '😢', '😔', '😐', '😊', '😄'];
+                document.getElementById('summary-mood').textContent = moodEmojis[today.mood];
+                document.getElementById('summary-rating').textContent = `${today.mood}/5`;
+                document.getElementById('summary-streak').textContent = `${currentStreak} days`;
+                
+                const journalEntry = document.getElementById('journal-entry').value;
+                if (journalEntry) {
+                    const sentiment = analyzeSentiment(journalEntry);
+                    document.getElementById('summary-sentiment').textContent = sentiment;
+                }
+                
+                document.getElementById('daily-summary').classList.remove('hidden');
+            }
+        }
+
+        // Sentiment analysis
+        function setupSentimentAnalysis() {
+            const journalTextarea = document.getElementById('journal-entry');
+            journalTextarea.addEventListener('input', function() {
+                const text = this.value;
+                if (text.length > 10) {
+                    const sentiment = analyzeSentiment(text);
+                    const confidence = Math.random() * 0.3 + 0.7; // Simulate confidence
+                    document.getElementById('sentiment-result').innerHTML = `
+                        <strong>Sentiment:</strong> ${sentiment} (${(confidence * 100).toFixed(0)}% confidence)<br>
+                        <small>This analysis helps personalize your wellness recommendations</small>
+                    `;
+                }
+            });
+        }
+
+        // Simple sentiment analysis
+        function analyzeSentiment(text) {
+            const positiveWords = ['happy', 'good', 'great', 'amazing', 'wonderful', 'excited', 'grateful', 'blessed', 'love', 'joy', 'peaceful', 'calm', 'relaxed', 'confident', 'proud', 'accomplished'];
+            const negativeWords = ['sad', 'bad', 'terrible', 'awful', 'angry', 'frustrated', 'stressed', 'worried', 'anxious', 'depressed', 'tired', 'exhausted', 'overwhelmed', 'lonely', 'disappointed'];
+            
+            const words = text.toLowerCase().split(/\W+/);
+            let positiveCount = 0;
+            let negativeCount = 0;
+            
+            words.forEach(word => {
+                if (positiveWords.includes(word)) positiveCount++;
+                if (negativeWords.includes(word)) negativeCount++;
+            });
+            
+            if (positiveCount > negativeCount) return 'Positive';
+            if (negativeCount > positiveCount) return 'Negative';
+            return 'Neutral';
+        }
+
+        // Save journal entry
+        function saveJournalEntry() {
+            const entry = document.getElementById('journal-entry').value;
+            if (!entry.trim()) {
+                alert('Please write something in your journal first!');
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const sentiment = analyzeSentiment(entry);
+            
+            // Remove existing entry for today
+            journalEntries = journalEntries.filter(e => e.date !== today);
+            
+            // Add new entry
+            journalEntries.push({
+                date: today,
+                entry: entry,
+                sentiment: sentiment,
+                timestamp: new Date().toISOString()
+            });
+
+            localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
+            document.getElementById('journal-entry').value = '';
+            
+            alert('Journal entry saved! 📝');
+            loadJournalEntries();
+        }
+
+        // Load journal entries
+        function loadJournalEntries() {
+            const container = document.getElementById('journal-entries');
+            if (journalEntries.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No journal entries yet. Start writing to track your thoughts and feelings!</p>';
+                return;
+            }
+
+            container.innerHTML = journalEntries
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 10) // Show last 10 entries
+                .map(entry => `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium text-gray-800">${new Date(entry.date).toLocaleDateString()}</span>
+                            <span class="text-sm px-2 py-1 rounded-full ${
+                                entry.sentiment === 'Positive' ? 'bg-green-100 text-green-800' :
+                                entry.sentiment === 'Negative' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                            }">${entry.sentiment}</span>
+                        </div>
+                        <p class="text-gray-700">${entry.entry.substring(0, 200)}${entry.entry.length > 200 ? '...' : ''}</p>
+                    </div>
+                `).join('');
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Generate sample data if none exists
+            if (moodData.length === 0) {
+                generateSampleData();
+            }
+
+            // Mood trend chart
+            const ctx = document.getElementById('moodChart');
+            if (ctx) {
+                const last30Days = getLast30Days();
+                const moodValues = last30Days.map(date => {
+                    const entry = moodData.find(d => d.date === date);
+                    return entry ? entry.mood : null;
+                });
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: last30Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                        datasets: [{
+                            label: 'Mood Rating',
+                            data: moodValues,
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            spanGaps: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 5,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Weekly pattern chart
+            const weeklyCtx = document.getElementById('weeklyChart');
+            if (weeklyCtx) {
+                const weeklyData = getWeeklyAverages();
+                new Chart(weeklyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                        datasets: [{
+                            label: 'Average Mood',
+                            data: weeklyData,
+                            backgroundColor: [
+                                '#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6', '#EC4899'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 5
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Generate sample data for demo
+        function generateSampleData() {
+            const today = new Date();
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                
+                if (Math.random() > 0.2) { // 80% chance of having data
+                    moodData.push({
+                        date: date.toISOString().split('T')[0],
+                        mood: Math.floor(Math.random() * 3) + 2 + (Math.random() > 0.7 ? 1 : 0), // Bias towards 2-5
+                        factors: ['sleep', 'work', 'exercise'].filter(() => Math.random() > 0.5),
+                        timestamp: date.toISOString()
+                    });
+                }
+            }
+            localStorage.setItem('moodData', JSON.stringify(moodData));
+        }
+
+        // Get last 30 days
+        function getLast30Days() {
+            const dates = [];
+            const today = new Date();
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                dates.push(date.toISOString().split('T')[0]);
+            }
+            return dates;
+        }
+
+        // Get weekly averages
+        function getWeeklyAverages() {
+            const weeklyTotals = [0, 0, 0, 0, 0, 0, 0];
+            const weeklyCounts = [0, 0, 0, 0, 0, 0, 0];
+            
+            moodData.forEach(entry => {
+                const dayOfWeek = new Date(entry.date).getDay();
+                const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday=0 to Sunday=6
+                weeklyTotals[adjustedDay] += entry.mood;
+                weeklyCounts[adjustedDay]++;
+            });
+            
+            return weeklyTotals.map((total, index) => 
+                weeklyCounts[index] > 0 ? (total / weeklyCounts[index]).toFixed(1) : 0
+            );
+        }
+
+        // Load personalized recommendations
+        function loadRecommendations() {
+            const recentMoods = moodData.slice(-7); // Last 7 entries
+            const avgMood = recentMoods.length > 0 ? 
+                recentMoods.reduce((sum, entry) => sum + entry.mood, 0) / recentMoods.length : 3;
+            
+            const commonFactors = getCommonFactors();
+            const recommendations = generateRecommendations(avgMood, commonFactors);
+            
+            const container = document.getElementById('recommendations-grid');
+            container.innerHTML = recommendations.map(rec => `
+                <div class="recommendation-card bg-white rounded-xl p-6 card-shadow">
+                    <div class="text-3xl mb-3">${rec.icon}</div>
+                    <h3 class="text-lg font-semibold mb-2 text-gray-800">${rec.title}</h3>
+                    <p class="text-gray-600 text-sm mb-4">${rec.description}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">${rec.category}</span>
+                        <button onclick="implementRecommendation('${rec.id}')" class="text-blue-500 hover:text-blue-700 text-sm font-medium">Try Now</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get common mood factors
+        function getCommonFactors() {
+            const factorCounts = {};
+            moodData.forEach(entry => {
+                entry.factors.forEach(factor => {
+                    factorCounts[factor] = (factorCounts[factor] || 0) + 1;
+                });
+            });
+            
+            return Object.entries(factorCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3)
+                .map(([factor]) => factor);
+        }
+
+        // Generate personalized recommendations
+        function generateRecommendations(avgMood, commonFactors) {
+            const allRecommendations = [
+                {
+                    id: 'sleep',
+                    title: 'Improve Sleep Hygiene',
+                    description: 'Create a consistent bedtime routine and optimize your sleep environment.',
+                    icon: '😴',
+                    category: 'Sleep',
+                    condition: () => commonFactors.includes('sleep') || avgMood < 3
+                },
+                {
+                    id: 'exercise',
+                    title: 'Daily Movement',
+                    description: 'Even 10 minutes of walking can boost your mood and energy levels.',
+                    icon: '🏃‍♀️',
+                    category: 'Physical',
+                    condition: () => commonFactors.includes('exercise') || avgMood < 3.5
+                },
+                {
+                    id: 'meditation',
+                    title: 'Mindfulness Practice',
+                    description: 'Start with 5-minute guided meditations to reduce stress and anxiety.',
+                    icon: '🧘‍♀️',
+                    category: 'Mental',
+                    condition: () => commonFactors.includes('work') || avgMood < 3
+                },
+                {
+                    id: 'social',
+                    title: 'Connect with Others',
+                    description: 'Reach out to friends or family members for meaningful conversations.',
+                    icon: '👥',
+                    category: 'Social',
+                    condition: () => commonFactors.includes('social') || avgMood < 3.5
+                },
+                {
+                    id: 'nature',
+                    title: 'Spend Time Outdoors',
+                    description: 'Natural light and fresh air can significantly improve your mood.',
+                    icon: '🌳',
+                    category: 'Environment',
+                    condition: () => commonFactors.includes('weather') || avgMood < 4
+                },
+                {
+                    id: 'gratitude',
+                    title: 'Gratitude Practice',
+                    description: 'Write down three things you\'re grateful for each day.',
+                    icon: '🙏',
+                    category: 'Mental',
+                    condition: () => avgMood >= 3.5
+                }
+            ];
+
+            return allRecommendations.filter(rec => rec.condition()).slice(0, 6);
+        }
+
+        // Implement recommendation
+        function implementRecommendation(id) {
+            const actions = {
+                'sleep': () => alert('💤 Sleep Tip: Try the 3-2-1 rule - no food 3 hours before bed, no liquids 2 hours before, and no screens 1 hour before sleep!'),
+                'exercise': () => alert('🏃‍♀️ Quick Exercise: Try 10 jumping jacks, 10 push-ups, and a 1-minute plank right now!'),
+                'meditation': () => startMeditation(),
+                'social': () => alert('👥 Social Connection: Consider calling a friend, sending a thoughtful message, or planning a coffee date!'),
+                'nature': () => alert('🌳 Nature Break: Step outside for 5 minutes, take deep breaths, and notice 5 things you can see in nature!'),
+                'gratitude': () => startGratitude()
+            };
+            
+            if (actions[id]) {
+                actions[id]();
+            }
+        }
+
+        // Quick wellness actions
+        function startBreathingExercise() {
+            document.getElementById('breathing-modal').classList.remove('hidden');
+            document.getElementById('breathing-modal').classList.add('flex');
+        }
+
+        function closeBreathingModal() {
+            document.getElementById('breathing-modal').classList.add('hidden');
+            document.getElementById('breathing-modal').classList.remove('flex');
+        }
+
+        function startBreathing() {
+            let count = 0;
+            const instruction = document.getElementById('breathing-instruction');
+            const circle = document.getElementById('breathing-circle');
+            const startBtn = document.getElementById('start-breathing');
+            
+            startBtn.style.display = 'none';
+            
+            const breathingCycle = () => {
+                if (count >= 6) { // 3 full cycles
+                    instruction.textContent = 'Great job! You completed the breathing exercise.';
+                    startBtn.style.display = 'inline-block';
+                    startBtn.textContent = 'Start Again';
+                    return;
+                }
+                
+                if (count % 2 === 0) {
+                    instruction.textContent = 'Breathe in... (4 seconds)';
+                    circle.style.transform = 'scale(1.5)';
+                } else {
+                    instruction.textContent = 'Breathe out... (4 seconds)';
+                    circle.style.transform = 'scale(1)';
+                }
+                
+                count++;
+                setTimeout(breathingCycle, 4000);
+            };
+            
+            breathingCycle();
+        }
+
+        function startMeditation() {
+            alert('🧘‍♀️ Starting 5-minute meditation:\n\n1. Sit comfortably and close your eyes\n2. Focus on your breath\n3. When your mind wanders, gently return to your breath\n4. Continue for 5 minutes\n\nSet a timer and begin when ready!');
+        }
+
+        function startGratitude() {
+            const gratitudes = prompt('🙏 Gratitude Practice:\n\nList 3 things you\'re grateful for today (separate with commas):');
+            if (gratitudes) {
+                alert(`Beautiful! Here\'s what you\'re grateful for:\n\n${gratitudes.split(',').map((item, index) => `${index + 1}. ${item.trim()}`).join('\n')}\n\nTake a moment to really feel that gratitude. ✨`);
+            }
+        }
+
+        function startMovement() {
+            alert('🏃‍♀️ Quick Movement Break:\n\n1. Stand up and stretch your arms overhead\n2. Do 10 jumping jacks\n3. March in place for 30 seconds\n4. Take 5 deep breaths\n\nYour body and mind will thank you!');
+        }
+
+        function updateStreakDisplay() {
+            // Update streak displays throughout the app
+            document.querySelectorAll('#summary-streak').forEach(el => {
+                el.textContent = `${currentStreak} days`;
+            });
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97e59d547217a7e4',t:'MTc1Nzc0NTIyMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
